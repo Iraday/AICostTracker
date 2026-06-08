@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Claude Limit Tracker Sync",
+  "version": "1.0",
+  "description": "Intercepts Claude AI limits and pushes them to your local dashboard.",
+  "permissions": ["scripting"],
+  "host_permissions": [
+    "*://claude.ai/*",
+    "http://localhost:3334/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["*://claude.ai/*"]
+    }
+  ]
+}
