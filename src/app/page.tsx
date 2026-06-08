@@ -3,27 +3,39 @@
 import { useEffect, useState } from "react";
 import "./globals.css";
 
+type LimitData = {
+  label: string;
+  usedPercentage: number;
+  resetText: string;
+};
+
 type UsageData = {
-  openai: { limit: number; used: number; refreshTime: string };
-  claude: { limit: number; used: number; refreshTime: string };
-  antigravity: { limit: number; used: number; refreshTime: string };
+  openai: { limits: LimitData[] };
+  claude: { limits: LimitData[] };
+  antigravity: { limits: LimitData[] };
 };
 
 export default function Home() {
   const [data, setData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadData = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/usage");
+      const d = await res.json();
+      setData(d);
+    } catch (err) {
+      console.error("Failed to fetch usage", err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    fetch("/api/usage")
-      .then((res) => res.json())
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch usage", err);
-        setLoading(false);
-      });
+    loadData();
   }, []);
 
   if (loading) {
@@ -39,36 +51,37 @@ export default function Home() {
       <header className="header">
         <h1>AI Usage Tracker</h1>
         <p>Real-time telemetry and limits for your local assistants</p>
+        <button 
+          className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`} 
+          onClick={loadData}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? '🔄 Refreshing...' : '🔄 Refresh Data'}
+        </button>
       </header>
 
       <div className="cards-grid">
-        {/* OpenAI / Codex Card */}
-        <StatCard
-          title="OpenAI API (Codex/GPT)"
-          icon="🤖"
-          used={data.openai.used}
-          limit={data.openai.limit}
-          refresh={data.openai.refreshTime}
-          color="var(--accent-color)"
-        />
-
         {/* Claude Desktop Card */}
         <StatCard
-          title="Claude Desktop"
+          title="Claude Desktop (Pro)"
           icon="🧠"
-          used={data.claude.used}
-          limit={data.claude.limit}
-          refresh={data.claude.refreshTime}
+          limits={data.claude.limits}
           color="var(--warning-color)"
+        />
+
+        {/* Codex/Cursor Card */}
+        <StatCard
+          title="Codex / Cursor"
+          icon="🤖"
+          limits={data.openai.limits}
+          color="var(--accent-color)"
         />
 
         {/* Google Antigravity Card */}
         <StatCard
           title="Google Antigravity"
           icon="🚀"
-          used={data.antigravity.used}
-          limit={data.antigravity.limit}
-          refresh={data.antigravity.refreshTime}
+          limits={data.antigravity.limits}
           color="var(--success-color)"
         />
       </div>
@@ -76,12 +89,7 @@ export default function Home() {
   );
 }
 
-function StatCard({ title, icon, used, limit, refresh, color }: { title: string, icon: string, used: number, limit: number, refresh: string, color: string }) {
-  const percentage = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-  
-  // Dynamic color based on usage percentage
-  const barColor = percentage > 90 ? "var(--danger-color)" : color;
-
+function StatCard({ title, icon, limits, color }: { title: string, icon: string, limits: LimitData[], color: string }) {
   return (
     <div className="stat-card">
       <div className="card-header">
@@ -89,21 +97,30 @@ function StatCard({ title, icon, used, limit, refresh, color }: { title: string,
         <div className="provider-icon">{icon}</div>
       </div>
       
-      <div className="usage-stats">
-        <span className="usage-used">{used}</span>
-        <span className="usage-limit">/ {limit}</span>
-      </div>
-
-      <div className="progress-bar-container">
-        <div 
-          className="progress-bar" 
-          style={{ width: `${percentage}%`, backgroundColor: barColor }} 
-        />
-      </div>
-
-      <div className="refresh-info">
-        <span>🔄 Refresh: {refresh}</span>
-        <span style={{marginLeft: "auto"}}>{percentage}% Used</span>
+      <div className="limits-container">
+        {limits.map((limit, idx) => {
+          const barColor = limit.usedPercentage > 90 ? "var(--danger-color)" : color;
+          
+          return (
+            <div key={idx} className="limit-row">
+              <div className="limit-header">
+                <span className="limit-label">{limit.label}</span>
+                <span className="limit-percentage">{limit.usedPercentage}% used</span>
+              </div>
+              
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar" 
+                  style={{ width: `${Math.min(100, Math.max(0, limit.usedPercentage))}%`, backgroundColor: barColor }} 
+                />
+              </div>
+              
+              <div className="limit-footer">
+                <span className="limit-reset">{limit.resetText}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

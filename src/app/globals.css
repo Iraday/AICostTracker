@@ -57,7 +57,7 @@ body {
 
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
 }
 
@@ -113,44 +113,52 @@ body {
   justify-content: center;
 }
 
-.usage-stats {
+.limits-container {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.limit-row {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
-.usage-used {
-  font-size: 2.5rem;
-  font-weight: 700;
+.limit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.usage-limit {
-  font-size: 1.1rem;
+.limit-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.limit-percentage {
+  font-size: 0.95rem;
   color: var(--text-muted);
 }
 
 .progress-bar-container {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15); /* Light grey bar base */
   border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 1rem;
 }
 
 .progress-bar {
   height: 100%;
   border-radius: 4px;
-  transition: width 1s ease-out;
+  transition: width 1s ease-out, background-color 0.5s ease;
 }
 
-.refresh-info {
-  font-size: 0.9rem;
+.limit-footer {
+  font-size: 0.85rem;
   color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .loading {
@@ -167,4 +175,33 @@ body {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
+}
+
+.refresh-btn {
+  margin-top: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.refreshing {
+  animation: pulse 1s infinite;
 }
